@@ -1,9 +1,19 @@
 {
     "name": "napcat-plugin-ai-tagger",
-    "version": "1.0.0",
-    "type": "反推图片tag",
+    "plugin": "反推图片tag",
+    "version": "1.0.1",
+    "type": "module",
     "main": "index.mjs",
     "description": "图片反推AI生成标签，nsfw程度评分及角色识别",
     "author": "Tavre",
+    "license": "MIT",
+    "napcat": {
+        "tags": [
+            "AI",
+            "图片"
+        ],
+        "minVersion": "4.14.0",
+        "homepage": ""
+    },
     "dependencies": {}
 }

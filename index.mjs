@@ -85,6 +85,18 @@ async function callOB11(ctx, action, params) {
     }
 }
 
+function textSegment(text) {
+    return { type: 'text', data: { text } };
+}
+
+async function sendGroupMsg(ctx, groupId, message) {
+    return callOB11(ctx, 'send_msg', {
+        message_type: 'group',
+        group_id: String(groupId),
+        message: typeof message === 'string' ? [textSegment(message)] : message,
+    });
+}
+
 // ============================================================
 // 从消息中提取图片 URL
 // ============================================================
@@ -278,18 +290,12 @@ async function onMessage(ctx, event) {
     }
 
     if (!imageUrl) {
-        await callOB11(ctx, "send_group_msg", {
-            group_id: groupId,
-            message: "请附带图片或引用一条含图片的消息再发送 rec",
-        });
+        await sendGroupMsg(ctx, groupId, "请附带图片或引用一条含图片的消息再发送 rec");
         return;
     }
 
     // 通知用户正在识别
-    await callOB11(ctx, "send_group_msg", {
-        group_id: groupId,
-        message: "正在识别，请稍等...",
-    });
+    await sendGroupMsg(ctx, groupId, "正在识别，请稍等...");
 
     try {
         // HuggingFace Gradio API 三步流程
@@ -303,42 +309,43 @@ async function onMessage(ctx, event) {
         const data = await fetchResult(sessionHash);
 
         const result = formatResult(data);
-        await callOB11(ctx, "send_group_msg", {
-            group_id: groupId,
-            message: result,
-        });
+        await sendGroupMsg(ctx, groupId, result);
     } catch (e) {
         ctx.logger.error("[WD-Tagger] 识别失败", e);
-        await callOB11(ctx, "send_group_msg", {
-            group_id: groupId,
-            message: `识别失败: ${e.message}`,
-        });
+        await sendGroupMsg(ctx, groupId, `识别失败: ${e.message}`);
     }
 }
 
 // ============================================================
 // 插件生命周期导出
 // ============================================================
-let plugin_config_ui_obj = [];
+export let plugin_config_ui = [];
 
-async function plugin_init_fn(ctx) {
+export async function plugin_init(ctx) {
     ctx.logger.info("[WD-Tagger] 插件加载中...");
     loadConfig(ctx);
-    plugin_config_ui_obj = buildConfigUI(ctx);
+    plugin_config_ui = buildConfigUI(ctx);
 }
 
-async function plugin_get_config(ctx) {
+export async function plugin_onmessage(ctx, event) {
+    if (event.post_type !== 'message') return;
+    await onMessage(ctx, event);
+}
+
+export async function plugin_cleanup(ctx) {
+    ctx.logger.info("[WD-Tagger] 插件已卸载");
+}
+
+export async function plugin_get_config(ctx) {
     return currentConfig;
 }
 
-function plugin_on_config_change(ctx, _, key, value) {
-    saveConfig(ctx, { [key]: value });
+export async function plugin_set_config(ctx, config) {
+    currentConfig = { ...DEFAULT_CONFIG, ...config };
+    saveConfig(ctx, currentConfig);
+    ctx.logger.info("[WD-Tagger] 配置已通过 WebUI 更新");
 }
 
-export {
-    plugin_config_ui_obj as plugin_config_ui,
-    plugin_init_fn as plugin_init,
-    plugin_get_config,
-    plugin_on_config_change,
-    onMessage as plugin_onmessage,
-};
+export async function plugin_on_config_change(ctx, _, key, value) {
+    saveConfig(ctx, { [key]: value });
+}
