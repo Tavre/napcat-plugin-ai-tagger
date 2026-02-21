@@ -4,7 +4,7 @@
     "version": "1.0.1",
     "type": "module",
     "main": "index.mjs",
-    "description": "图片反推AI生成标签，nsfw程度评分及角色识别",
+    "description": "Image reverse tagger with NSFW score and character recognition",
     "author": "Tavre",
     "license": "MIT",
     "napcat": {

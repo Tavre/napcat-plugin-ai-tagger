@@ -90,8 +90,8 @@ jobs:
             if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
               echo "✅ 重试成功 (HTTP $HTTP_CODE)"
             else
-              echo "❌ 重试仍然失败 (HTTP $HTTP_CODE)"
-              exit 1
+            echo "Retry failed (HTTP $HTTP_CODE); skipping index update"
+            exit 1
             fi
           fi
 
