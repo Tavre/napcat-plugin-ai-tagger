@@ -183,7 +183,6 @@ jobs:
             const idx = data.plugins.findIndex(p => p.id === pluginId);
             if (idx >= 0) { data.plugins[idx] = newPlugin; }
             else { data.plugins.push(newPlugin); }
-            data.updateTime = new Date().toISOString().replace(/\.\d{3}Z/, 'Z');
             fs.writeFileSync(process.env.INDEX_FILE_NAME, JSON.stringify(data, null, 2) + '\n');
           "
 
